@@ -1,5 +1,10 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=3 format=2]
 
 [ext_resource path="res://Mesh/Bush2GLB3.glb" type="PackedScene" id=1]
+[ext_resource path="res://Mesh/foliage.material" type="Material" id=2]
 
 [node name="Bush2GLB3" instance=ExtResource( 1 )]
+
+[node name="Cube" parent="." index="0"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0632358 )
+material/0 = ExtResource( 2 )
