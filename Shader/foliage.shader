@@ -20,7 +20,7 @@ uniform float FaceRoationVariation : hint_range(-3.0, 3.0) = 1.0;
 
 uniform float FresnelStrength : hint_range(-2.0, 2.0) = 0.5;
 uniform float FresnelBlend : hint_range(-1.0, 1.0) = 1.0;
-
+uniform bool DeactivateGlobalVariation;
 // Uniforms for wiggling
 uniform sampler2D WiggleNoise : hint_black;
 uniform float WiggleFrequency = 3.0;
@@ -62,12 +62,11 @@ void vertex()
 	
 	//Wind-Effect
 	//adapted from: https://github.com/ruffiely/windshader_godot
-//	vec3 world_pos = (WORLD_MATRIX * vec4(VERTEX, 1.0)).xyz;	//Generates world coordinates for vertecies
-	
+	float contribution = 1.0 * (1.0 - float(DeactivateGlobalVariation));
+	vec3 world_pos = (WORLD_MATRIX * vec4(VERTEX, 1.0)).xyz * contribution;	//Generates world coordinates for vertecies
 	// Removed using world_position due to dragging bug
-	// Using local coordinates fixes this issue
-//	float offset = fract((-world_pos.x + world_pos.z) * (1.0 / WindScale) + (TIME * WindScale/1000.0));	//Generates linear curve that slides along vertecies in world space
-	float offset = fract((-VERTEX.x + VERTEX.z) * (1.0 / WindScale) + (TIME * WindScale/1000.0));	//Generates linear curve that slides along vertecies in world space
+	float positional_influence = -VERTEX.x + VERTEX.z -world_pos.x + world_pos.z;
+	float offset = fract(positional_influence * (1.0 / WindScale) + (TIME * WindScale/1000.0));	//Generates linear curve that slides along vertecies in world space
 	offset = min(1.0 - offset, offset);														//Makes generated curve a smooth gradient
 	offset = (1.0 - offset) * offset * 2.0;													//Smoothes gradient further
 	
@@ -85,7 +84,7 @@ void vertex()
 	vec3 wind_offset = vec3(VERTEX.x * si * mask, VERTEX.y * si * mask, VERTEX.z * csi * mask);
 	
 	float col = VERTEX.y * ColorRamp;
-	COLOR = vec4(col, col, col, 1.0);
+	COLOR = vec4(col, positional_influence, col, 1.0);
 	VERTEX += obj_oriented_offset + wind_offset;
 	
 	obj_vertex = VERTEX;
@@ -110,7 +109,7 @@ void fragment()
 	vec2 wiggle_uv = normalize(obj_vertex.xz) / WiggleScale;
 	float wiggle = texture(WiggleNoise, wiggle_uv + TIME * WiggleSpeed).r;
 	float wiggle_final_strength = wiggle * WiggleStrength;
-	wiggle_final_strength *= clamp(sin(TIME * WiggleFrequency), 0.0, 1.0);
+	wiggle_final_strength *= clamp(sin(TIME * WiggleFrequency + COLOR.g * 0.2), 0.0, 1.0);
 	vec2 uv = UV;
 	uv = rotateUV(uv, wiggle_final_strength, vec2(0.5));
 	uv = clamp(uv, 0.0, 1.0);

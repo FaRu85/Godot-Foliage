@@ -23,4 +23,11 @@ Wind Behavior:
     Rainware
     https://youtu.be/CMkv8Ui3d9g
 
+Wiggle Effect:
+    Nekoto
+    https://github.com/nekotogd
+	
+
 Mesh and Textures are created by FaRu and can be used freely.
+
+Special thanks to Nekoto for his contributions.
