@@ -28,6 +28,10 @@ uniform float WiggleStrength = 0.1;
 uniform float WiggleSpeed = 1.0;
 uniform float WiggleScale = 3.0;
 
+uniform float DistanceScale : hint_range(0.0, 5.0) = 0.5;
+uniform float DistanceStart = 0;
+uniform float DistanceScaleRange = 70;
+
 vec2 rotateUV(vec2 uv, float rotation, vec2 mid)
 {
 	float cosAngle = cos(rotation);
@@ -41,12 +45,22 @@ vec2 rotateUV(vec2 uv, float rotation, vec2 mid)
 varying vec3 obj_vertex;
 void vertex()
 {
+	float distanceScale = 1.0;
+	vec3 world_pos = (WORLD_MATRIX * vec4(VERTEX, 1.0)).xyz;	//Generates world coordinates for vertecies
+	vec3 distance_vector = world_pos - (CAMERA_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+	float square_distance = distance_vector.x * distance_vector.x + distance_vector.y * distance_vector.y + distance_vector.z * distance_vector.z;
+	float square_end = (DistanceScaleRange + DistanceStart) * (DistanceScaleRange + DistanceStart);
+	float square_start = DistanceStart * DistanceStart;
+	float square_range = square_end - square_start;
+	
+	float distance_influence = clamp((square_distance - square_start) / square_range, 0.0, 1.0);
 	//Camera-Orientation based on https://www.youtube.com/watch?v=iASMFba7GeI
 	vec3 orient_2d = vec3(1.0, 1.0, 0.0) - vec3(UV.x, UV.y, 0.0);
 	orient_2d *= 2.0;
 	orient_2d -= vec3(1.0, 1.0, 0.0);
 	orient_2d *= -1.0;
 	orient_2d *= MeshScale;
+	orient_2d *= (1.0 + distance_influence * DistanceScale);
 	
 	//random tilt
 	float angle = 6.248 * UV2.x * FaceRoationVariation;
@@ -63,9 +77,9 @@ void vertex()
 	//Wind-Effect
 	//adapted from: https://github.com/ruffiely/windshader_godot
 	float contribution = 1.0 * (1.0 - float(DeactivateGlobalVariation));
-	vec3 world_pos = (WORLD_MATRIX * vec4(VERTEX, 1.0)).xyz * contribution;	//Generates world coordinates for vertecies
+	vec3 world_pos_eff = world_pos * contribution;	//Generates world coordinates for vertecies
 	// Removed using world_position due to dragging bug
-	float positional_influence = -VERTEX.x + VERTEX.z -world_pos.x + world_pos.z;
+	float positional_influence = -VERTEX.x + VERTEX.z -world_pos_eff.x + world_pos_eff.z;
 	float offset = fract(positional_influence * (1.0 / WindScale) + (TIME * WindScale/1000.0));	//Generates linear curve that slides along vertecies in world space
 	offset = min(1.0 - offset, offset);														//Makes generated curve a smooth gradient
 	offset = (1.0 - offset) * offset * 2.0;													//Smoothes gradient further
@@ -84,7 +98,7 @@ void vertex()
 	vec3 wind_offset = vec3(VERTEX.x * si * mask, VERTEX.y * si * mask, VERTEX.z * csi * mask);
 	
 	float col = VERTEX.y * ColorRamp;
-	COLOR = vec4(col, positional_influence, col, 1.0);
+	COLOR = vec4(col, positional_influence, distance_influence, 1.0);
 	VERTEX += obj_oriented_offset + wind_offset;
 	
 	obj_vertex = VERTEX;
@@ -105,6 +119,7 @@ void fragment()
 	fres_col *= fresnel;
 	fres_col *= fresnel_rate;
 	fres_col *= FresnelBlend;
+	//fres_col *= (1.0 - COLOR.b);
 	
 	vec2 wiggle_uv = normalize(obj_vertex.xz) / WiggleScale;
 	float wiggle = texture(WiggleNoise, wiggle_uv + TIME * WiggleSpeed).r;
@@ -113,8 +128,11 @@ void fragment()
 	vec2 uv = UV;
 	uv = rotateUV(uv, wiggle_final_strength, vec2(0.5));
 	uv = clamp(uv, 0.0, 1.0);
-	float alpha = texture(Alpha, uv.xy).r;
-	
+	vec3 tex = texture(Alpha, uv.xy).rgb;
+	float x = COLOR.b;
+	float alpha = clamp(tex.r + tex.g * 2.0 * COLOR.b ,0.0, 1.0);
+	alpha = clamp((clamp(tex.g * 1.0 , 1.0 - x, 1.0) - (1.0 - x)) * 10.0 + tex.r, 0.0, 1.0);
+	//albedo = vec3(COLOR.b,COLOR.b,COLOR.b);
 	ALBEDO = albedo;
 	ALPHA = alpha;
 	EMISSION = fres_col;
