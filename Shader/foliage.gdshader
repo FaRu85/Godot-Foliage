@@ -1,11 +1,11 @@
 shader_type spatial;
-render_mode depth_draw_alpha_prepass, specular_schlick_ggx;
-//render_mode blend_mix, cull_disabled, depth_draw_alpha_prepass, specular_disabled;
+render_mode depth_draw_opaque, specular_schlick_ggx, depth_prepass_alpha ;
+//render_mode blend_mix, cull_disabled, depth_draw_opaque, specular_disabled;
 
-uniform vec4 TopColor : hint_color = vec4(0.24, 0.47, 0.27, 1.0);
-uniform vec4 BottomColor : hint_color = vec4(0.13, 0.33, 0.25, 1.0);
+uniform vec4 TopColor : source_color = vec4(0.24, 0.47, 0.27, 1.0);
+uniform vec4 BottomColor : source_color = vec4(0.13, 0.33, 0.25, 1.0);
 uniform sampler2D Alpha;
-uniform vec4 FresnelColor : hint_color = vec4(0.58, 0.65, 0.33, 1.0);
+uniform vec4 FresnelColor : source_color = vec4(0.58, 0.65, 0.33, 1.0);
 
 uniform float WindScale : hint_range(1.0, 20.0) = 1.0;
 uniform float WindSpeed : hint_range(0.0, 20.0) = 4.0;
@@ -22,7 +22,7 @@ uniform float FresnelStrength : hint_range(-2.0, 2.0) = 0.5;
 uniform float FresnelBlend : hint_range(-1.0, 1.0) = 1.0;
 uniform bool DeactivateGlobalVariation;
 // Uniforms for wiggling
-uniform sampler2D WiggleNoise : hint_black;
+uniform sampler2D WiggleNoise : hint_default_black;
 uniform float WiggleFrequency = 3.0;
 uniform float WiggleStrength = 0.1;
 uniform float WiggleSpeed = 1.0;
@@ -46,8 +46,8 @@ varying vec3 obj_vertex;
 void vertex()
 {
 	float distanceScale = 1.0;
-	vec3 world_pos = (WORLD_MATRIX * vec4(VERTEX, 1.0)).xyz;	//Generates world coordinates for vertecies
-	vec3 distance_vector = world_pos - (CAMERA_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+	vec3 world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;	//Generates world coordinates for vertecies
+	vec3 distance_vector = world_pos - (INV_VIEW_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
 	float square_distance = distance_vector.x * distance_vector.x + distance_vector.y * distance_vector.y + distance_vector.z * distance_vector.z;
 	float square_end = (DistanceScaleRange + DistanceStart) * (DistanceScaleRange + DistanceStart);
 	float square_start = DistanceStart * DistanceStart;
@@ -70,9 +70,9 @@ void vertex()
 	
 	orient_2d *= rotation;
 	
-	vec3 oriented_offset = reflect((CAMERA_MATRIX * vec4(orient_2d, 0.0)).xyz,CAMERA_MATRIX[0].xyz);
-	//vec3 oriented_offset = (CAMERA_MATRIX * vec4(orient_2d, 0.0)).xyz;
-	vec3 obj_oriented_offset = (vec4(oriented_offset, 0.0) * WORLD_MATRIX).xyz;
+	vec3 oriented_offset = reflect((INV_VIEW_MATRIX * vec4(orient_2d, 0.0)).xyz,INV_VIEW_MATRIX[0].xyz);
+	//vec3 oriented_offset = (INV_VIEW_MATRIX * vec4(orient_2d, 0.0)).xyz;
+	vec3 obj_oriented_offset = (vec4(oriented_offset, 0.0) * MODEL_MATRIX).xyz;
 	
 	//Wind-Effect
 	//adapted from: https://github.com/ruffiely/windshader_godot
