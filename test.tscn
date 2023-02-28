@@ -1,25 +1,39 @@
-[gd_scene load_steps=2 format=3 uid="uid://b5kcg5hgjcli"]
+[gd_scene load_steps=3 format=3 uid="uid://b5kcg5hgjcli"]
 
 [ext_resource type="PackedScene" uid="uid://b7e0ywe1g86fa" path="res://Mesh/Bush2GLB3.tscn" id="1"]
+
+[sub_resource type="Environment" id="Environment_pdcgp"]
+background_mode = 1
+background_color = Color(0.2, 0.294118, 0.341176, 1)
+sky_custom_fov = 79.1
+ambient_light_source = 2
+ambient_light_color = Color(0.498039, 0.498039, 0.498039, 1)
+tonemap_mode = 2
+tonemap_exposure = 1.74
+tonemap_white = 2.14
 
 [node name="Node3D" type="Node3D"]
 
 [node name="Bush2GLB3" parent="." instance=ExtResource("1")]
+transform = Transform3D(1, 0, 0, 0, 0.993236, -0.116116, 0, 0.116116, 0.993236, 0, 0, 0)
 
 [node name="Bush2GLB4" parent="." instance=ExtResource("1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0609756, 0, 2.76642)
+transform = Transform3D(0.69854, 0, 0.715571, 0, 1, 0, -0.715571, 0, 0.69854, 0.0609756, 0, 2.76642)
 
 [node name="Bush2GLB5" parent="." instance=ExtResource("1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0609756, 0, 5.38222)
+transform = Transform3D(0.676709, 0, -0.736251, -0.0954247, 0.991565, -0.0877076, 0.73004, 0.129609, 0.671001, 0.0609756, 0, 5.38222)
 
 [node name="Bush2GLB6" parent="." instance=ExtResource("1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.75861, 0, -1.13487)
 
 [node name="Bush2GLB7" parent="." instance=ExtResource("1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.81959, 0, 1.63155)
+transform = Transform3D(0.767557, 0, -0.640981, 0, 1, 0, 0.640981, 0, 0.767557, 2.81959, 0, 1.63155)
 
 [node name="Bush2GLB8" parent="." instance=ExtResource("1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.81959, 0, 4.24735)
+transform = Transform3D(-0.146256, 0, 0.989247, 0, 1, 0, -0.989247, 0, -0.146256, 2.81959, 0, 4.24735)
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(0.877583, -0.229849, 0.420736, 0, 0.877583, 0.479426, -0.479426, -0.420736, 0.770151, 2.68942, 3.06457, 4.92294)
+transform = Transform3D(-0.809017, -0.190394, 0.556095, 0, 0.946085, 0.323917, -0.587785, 0.262055, -0.765399, 6.476, 4.457, -6.505)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_pdcgp")
